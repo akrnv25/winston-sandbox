@@ -1,0 +1,25 @@
+{
+  "name": "winston-sandbox",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ./src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/akrnv25/winston-sandbox.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/akrnv25/winston-sandbox/issues"
+  },
+  "homepage": "https://github.com/akrnv25/winston-sandbox#readme",
+  "dependencies": {
+    "winston": "^3.8.2"
+  },
+  "devDependencies": {
+    "prettier": "^2.8.4"
+  }
+}
