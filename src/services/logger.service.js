@@ -1,10 +1,8 @@
-// https://github.com/winstonjs/winston/blob/master/README.md
-
 const winston = require('winston');
-const jsonStringify = require('fast-safe-stringify');
-const { format } = require('util');
-const { combine, timestamp, printf, label } = winston.format;
+const { format } = require('winston');
+const { combine, timestamp } = winston.format;
 const config = require('../config');
+const isNil = require('../utilities/is-nil');
 
 class LoggerService {
   constructor() {
@@ -25,61 +23,39 @@ class LoggerService {
       success: '\u001b[1;32m',
       highlight: '\x1b[7m\u001b[1;33m',
       debug: '\u001b[1;33m',
-      log: '\u001B[37m'
-    };
-
-    // improved from https://github.com/winstonjs/winston/issues/1427 nikitamendelbaum commented on Nov 21, 2019
-    const myFormat = printf(
-      ({ level, message, label, timestamp, [Symbol.for('splat')]: args = [] }) => {
-        // let msg = `${timestamp} [${level}] : ${message} `;
-        // let msg = `${colors[level] || ''}[${label.toUpperCase()}]\x1b[0m | ${timestamp} | ${colors[level] || ''}${JSON.stringify(message)}\x1b[0m `;
-        let msg = `${colors[level] || ''}[${label.toUpperCase()}]\x1b[0m | ${timestamp} | ${
-          colors[level] || ''
-        }${format(message)}\x1b[0m`;
-        if (args) {
-          msg += ', ';
-          msg += format(args);
-        }
-        return msg;
-      }
-    );
-
-    // make formatting like console.log()
-    // https://github.com/winstonjs/winston/issues/1427 pgorecki commented on Jul 4, 2019
-    const logLikeFormat = {
-      transform(info) {
-        const { timestamp, label, message } = info;
-        const level = info[Symbol.for('level')];
-        const args = info[Symbol.for('splat')];
-        const strArgs = args ? args.map(jsonStringify).join(' ') : '';
-        info[Symbol.for('message')] = `${
-          colors[level] || ''
-        }[${label.toUpperCase()}]\x1b[0m | ${timestamp} | ${colors[level] || ''}${jsonStringify(
-          message
-        )}\x1b[0m ${strArgs}`;
-        return info;
-      }
+      base: '\u001B[37m'
     };
 
     const transports = [new winston.transports.Console()];
     if (config.logger.writeToFile) {
       const fileTransport = new winston.transports.File({
         filename: config.logger.fileName,
-        level: config.logger.level
+        level: 'base'
       });
       transports.push(fileTransport);
     }
+
+    const prepareMessage = format(info => {
+      const { level, message, timestamp } = info;
+      if (isNil(levels[level])) {
+        throw new Error(`Logger level "${level}" is not found`);
+      }
+      const details = info[Symbol.for('splat')] ?? [];
+      const validDetails = details
+        .map(detail => detail?.toString())
+        .filter(detail => typeof detail === 'string');
+      const messageWithDetails = [message, ...validDetails].join(', ');
+      // prettier-ignore
+      info[Symbol.for('message')] = `${colors[level]}[${timestamp} ${level.toUpperCase()}]\x1b[0m ${messageWithDetails}`;
+      return info;
+    });
 
     const logger = winston.createLogger({
       colorize: true,
       prettyPrint: true,
       levels: levels,
-      level: config.logger.level,
-      format: combine(
-        label({ label: config.logger.service }),
-        timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-        config.logger.wideFormatting === true ? myFormat : logLikeFormat
-      ),
+      level: 'base',
+      format: combine(timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }), prepareMessage()),
       transports: transports
     });
 

@@ -17,7 +17,6 @@
   },
   "homepage": "https://github.com/akrnv25/winston-sandbox#readme",
   "dependencies": {
-    "fast-safe-stringify": "^2.1.1",
     "winston": "^3.8.2"
   },
   "devDependencies": {
