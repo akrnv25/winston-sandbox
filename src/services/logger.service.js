@@ -59,8 +59,13 @@ class LoggerService {
       transports: transports
     });
 
-    const levelKeys = Object.keys(levels);
-    levelKeys.forEach(levelKey => (this[levelKey] = logger[levelKey].bind(logger)));
+    this.error = logger.error.bind(logger);
+    this.warn = logger.warn.bind(logger);
+    this.info = logger.info.bind(logger);
+    this.success = logger.success.bind(logger);
+    this.highlight = logger.highlight.bind(logger);
+    this.debug = logger.debug.bind(logger);
+    this.base = logger.base.bind(logger);
   }
 }
 
